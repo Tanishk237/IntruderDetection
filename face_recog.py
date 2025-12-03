@@ -6,9 +6,7 @@ import threading
 import insightface
 from insightface.app import FaceAnalysis
 
-# ------------------------------------------------------------
-# GLOBAL SHARED PROCESSED FRAME
-# ------------------------------------------------------------
+#global shared frame
 processed_frame = None
 processed_lock = threading.Lock()
 

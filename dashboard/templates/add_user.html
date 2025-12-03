@@ -1,0 +1,496 @@
+{% extends "layout.html" %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --wizard-bg: #1a1a1a;
+        --wizard-border: #333;
+        --input-bg: #222;
+        --input-border: #444;
+        --input-focus: var(--primary);
+    }
+
+    /* Wizard Container */
+    .wizard-card {
+        max-width: 640px;
+        margin: 3rem auto;
+        background: var(--wizard-bg);
+        border: 1px solid var(--wizard-border);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        display: flex;
+        flex-direction: column;
+        animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Header */
+    .wizard-header {
+        padding: 1.5rem 2rem;
+        background: #111;
+        border-bottom: 1px solid #2a2a2a;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .wizard-title {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #fff;
+        letter-spacing: -0.02em;
+    }
+
+    .step-indicator {
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--secondary-text);
+        background: #222;
+        padding: 6px 14px;
+        border-radius: 20px;
+        border: 1px solid #333;
+    }
+
+    /* Content Area */
+    .wizard-content {
+        padding: 2.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 450px;
+    }
+
+    /* Video Feed */
+    .video-wrapper {
+        width: 100%;
+        max-width: 320px; /* Reduced size */
+        aspect-ratio: 4/3;
+        background: #000;
+        border-radius: 12px;
+        overflow: hidden;
+        position: relative;
+        margin-bottom: 2rem;
+        border: 2px solid #333;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .video-wrapper.active {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.2);
+    }
+
+    .video-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .viewfinder {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        right: 20px;
+        bottom: 20px;
+        border: 2px dashed rgba(255,255,255,0.3);
+        border-radius: 8px;
+        pointer-events: none;
+        transition: all 0.3s;
+    }
+    
+    .video-wrapper.active .viewfinder {
+        border-color: rgba(255, 255, 255, 0.6);
+        border-style: solid;
+        border-width: 2px;
+    }
+
+    /* Form Elements */
+    .input-group {
+        width: 100%;
+        max-width: 400px;
+        margin-bottom: 2rem;
+    }
+
+    .input-label {
+        display: block;
+        margin-bottom: 0.75rem;
+        color: var(--secondary-text);
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+    .text-input {
+        width: 100%;
+        padding: 14px 18px;
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: 10px;
+        color: #fff;
+        font-size: 1.05rem;
+        transition: all 0.2s;
+    }
+
+    .text-input:focus {
+        outline: none;
+        border-color: var(--input-focus);
+        background: #2a2a2a;
+        box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.1);
+    }
+
+    /* Instructions */
+    .instruction-card {
+        background: #222;
+        padding: 1.25rem 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        width: 100%;
+        max-width: 420px;
+        border-left: 4px solid var(--primary);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .instruction-text {
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 0.35rem;
+    }
+
+    .instruction-sub {
+        font-size: 0.9rem;
+        color: var(--secondary-text);
+    }
+
+    /* Progress */
+    .progress-track {
+        width: 100%;
+        max-width: 420px;
+        height: 8px;
+        background: #333;
+        border-radius: 4px;
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary), #0056b3);
+        width: 0%;
+        transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Buttons */
+    .action-btn {
+        width: 100%;
+        max-width: 400px;
+        padding: 16px;
+        border: none;
+        border-radius: 10px;
+        font-size: 1.05rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        letter-spacing: 0.01em;
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
+    }
+
+    .btn-primary:hover {
+        background: var(--primary-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(var(--primary-rgb), 0.4);
+    }
+
+    .btn-secondary {
+        background: #333;
+        color: #fff;
+        border: 1px solid #444;
+    }
+
+    .btn-secondary:hover {
+        background: #444;
+        border-color: #555;
+    }
+    
+    .btn-success {
+        background: var(--success);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    }
+    
+    .btn-success:hover {
+        background: #218838;
+        transform: translateY(-2px);
+    }
+
+    .action-btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    .action-btn:active {
+        transform: scale(0.98) !important;
+    }
+
+    /* Utility */
+    .hidden {
+        display: none !important;
+    }
+    
+    .fade-in {
+        animation: fadeIn 0.4s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Success Animation */
+    .success-icon {
+        font-size: 5rem;
+        margin-bottom: 1.5rem;
+        color: var(--success);
+        animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    @keyframes popIn {
+        from { opacity: 0; transform: scale(0.5); }
+        to { opacity: 1; transform: scale(1); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wizard-card">
+    <div class="wizard-header">
+        <h1 class="wizard-title">Register New User</h1>
+        <div class="step-indicator" id="step-indicator">Step 1 of 3</div>
+    </div>
+
+    <div class="wizard-content">
+        <!-- Video Feed (Always visible but styled differently per step) -->
+        <div class="video-wrapper" id="video-wrapper">
+            <img src="{{ url_for('device_camera_feed') }}" alt="Device Camera Feed">
+            <div class="viewfinder"></div>
+        </div>
+
+        <!-- Step 1: User Details -->
+        <div id="step-1" class="fade-in" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+            <div class="input-group">
+                <label class="input-label" for="username">Enter Full Name or Username</label>
+                <input type="text" id="username" class="text-input" placeholder="e.g. John Doe" autocomplete="off" autofocus>
+            </div>
+            <button class="action-btn btn-primary" onclick="goToStep2()">
+                Start Registration <span>→</span>
+            </button>
+        </div>
+
+        <!-- Step 2: Capture Flow -->
+        <div id="step-2" class="hidden fade-in" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+            <div class="instruction-card">
+                <div class="instruction-text" id="instruction-main">Look straight ahead</div>
+                <div class="instruction-sub" id="instruction-sub">Image 1 of 5</div>
+            </div>
+
+            <div class="progress-track">
+                <div class="progress-bar" id="capture-progress"></div>
+            </div>
+
+            <button class="action-btn btn-primary" id="capture-btn" onclick="captureImage()">
+                Capture Photo
+            </button>
+        </div>
+
+        <!-- Step 3: Success -->
+        <div id="step-3" class="hidden fade-in" style="width: 100%; display: flex; flex-direction: column; align-items: center; text-align: center;">
+            <div class="success-icon">
+                <svg viewBox="0 0 24 24" width="80" height="80" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            </div>
+            <h2 style="margin-bottom: 0.75rem; color: #fff; font-size: 1.75rem;">Registration Complete</h2>
+            <p style="color: var(--secondary-text); margin-bottom: 2.5rem; font-size: 1.1rem;">The user has been successfully added to the secure database.</p>
+            
+            <div style="display: flex; gap: 1rem; width: 100%; max-width: 420px;">
+                <button class="action-btn btn-secondary" onclick="location.reload()" style="flex: 1;">Add Another</button>
+                <a href="/view_users" class="action-btn btn-success" style="text-decoration: none; flex: 1;">View All Users</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" style="position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(20px); background: #333; color: #fff; padding: 14px 28px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); opacity: 0; transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); pointer-events: none; z-index: 1000; font-weight: 500; display: flex; align-items: center; gap: 10px;">
+    <span id="toast-icon"></span>
+    <span id="toast-msg">Notification</span>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // State Management
+    const state = {
+        currentImageIndex: 0,
+        totalImages: 5,
+        username: "",
+        isCapturing: false
+    };
+    
+    // Instructions for each angle
+    const instructions = [
+        { main: "Look straight at the camera", sub: "Keep a neutral expression" },
+        { main: "Turn slightly to the LEFT", sub: "Show your right profile" },
+        { main: "Turn slightly to the RIGHT", sub: "Show your left profile" },
+        { main: "Tilt your head UP", sub: "Look slightly upwards" },
+        { main: "Tilt your head DOWN", sub: "Look slightly downwards" }
+    ];
+
+    // DOM Elements
+    const els = {
+        step1: document.getElementById('step-1'),
+        step2: document.getElementById('step-2'),
+        step3: document.getElementById('step-3'),
+        stepIndicator: document.getElementById('step-indicator'),
+        videoWrapper: document.getElementById('video-wrapper'),
+        usernameInput: document.getElementById('username'),
+        captureBtn: document.getElementById('capture-btn'),
+        progressBar: document.getElementById('capture-progress'),
+        instrMain: document.getElementById('instruction-main'),
+        instrSub: document.getElementById('instruction-sub'),
+        toast: document.getElementById('toast'),
+        toastMsg: document.getElementById('toast-msg'),
+        toastIcon: document.getElementById('toast-icon')
+    };
+
+    function showToast(msg, type = 'success') {
+        els.toastMsg.textContent = msg;
+        els.toastIcon.innerHTML = type === 'success' 
+            ? '<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>' 
+            : '<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+        
+        els.toast.style.background = type === 'success' ? 'rgba(40, 167, 69, 0.95)' : 'rgba(220, 53, 69, 0.95)';
+        els.toast.style.opacity = '1';
+        els.toast.style.transform = 'translateX(-50%) translateY(0)';
+        
+        setTimeout(() => {
+            els.toast.style.opacity = '0';
+            els.toast.style.transform = 'translateX(-50%) translateY(20px)';
+        }, 3000);
+    }
+
+    function goToStep2() {
+        const val = els.usernameInput.value.trim();
+        if (!val) {
+            showToast("Please enter a username", 'error');
+            els.usernameInput.focus();
+            return;
+        }
+        // Validation: Allow letters, numbers, underscores, spaces
+        if (!/^[a-zA-Z0-9_ ]+$/.test(val)) {
+            showToast("Username contains invalid characters", 'error');
+            return;
+        }
+
+        state.username = val.replace(/\s+/g, '_').toLowerCase();
+        
+        // Transition
+        els.step1.classList.add('hidden');
+        els.step2.classList.remove('hidden');
+        els.stepIndicator.textContent = "Step 2 of 3";
+        els.videoWrapper.classList.add('active');
+        
+        updateCaptureUI();
+    }
+
+    function updateCaptureUI() {
+        if (state.currentImageIndex < state.totalImages) {
+            const instr = instructions[state.currentImageIndex];
+            els.instrMain.textContent = instr.main;
+            els.instrSub.textContent = `Image ${state.currentImageIndex + 1} of ${state.totalImages} • ${instr.sub}`;
+            
+            const progress = (state.currentImageIndex / state.totalImages) * 100;
+            els.progressBar.style.width = `${progress}%`;
+        }
+    }
+
+    async function captureImage() {
+        if (state.isCapturing || state.currentImageIndex >= state.totalImages) return;
+        
+        state.isCapturing = true;
+        els.captureBtn.disabled = true;
+        const originalBtnContent = els.captureBtn.innerHTML;
+        els.captureBtn.innerHTML = 'Processing...';
+
+        try {
+            const formData = new FormData();
+            formData.append('username', state.username);
+            formData.append('img_num', state.currentImageIndex + 1);
+
+            const res = await fetch('/capture_image', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                state.currentImageIndex++;
+                showToast(`Image ${state.currentImageIndex} captured!`, 'success');
+                
+                if (state.currentImageIndex >= state.totalImages) {
+                    els.progressBar.style.width = '100%';
+                    setTimeout(finishRegistration, 800);
+                } else {
+                    updateCaptureUI();
+                    resetBtn(originalBtnContent);
+                }
+            } else {
+                showToast(data.message || "Capture failed", 'error');
+                resetBtn(originalBtnContent);
+            }
+        } catch (err) {
+            console.error(err);
+            showToast("Network connection error", 'error');
+            resetBtn(originalBtnContent);
+        }
+    }
+    
+    function resetBtn(content) {
+        state.isCapturing = false;
+        els.captureBtn.disabled = false;
+        els.captureBtn.innerHTML = content;
+    }
+
+    function finishRegistration() {
+        els.step2.classList.add('hidden');
+        els.step3.classList.remove('hidden');
+        els.stepIndicator.textContent = "Step 3 of 3";
+        els.videoWrapper.classList.remove('active');
+        els.videoWrapper.style.borderColor = 'var(--success)';
+    }
+
+    // Event Listeners
+    els.usernameInput.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            goToStep2();
+        }
+    });
+</script>
+{% endblock %}

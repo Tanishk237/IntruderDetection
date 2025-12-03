@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="text-center">
+    <h1>Welcome to Intruder Detection System</h1>
+    <p style="color: var(--secondary-text); font-size: 1.2rem; margin-bottom: 3rem;">
+        Manage authorized users and monitor security status.
+    </p>
+
+    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); max-width: 800px; margin: 0 auto;">
+        <div class="card">
+            <h3>Add New User</h3>
+            <p style="color: var(--secondary-text); margin-bottom: 1.5rem;">
+                Register a new authorized user by capturing their face data.
+            </p>
+            <a href="/add_user" class="btn">Add User</a>
+        </div>
+
+        <div class="card">
+            <h3>View All Users</h3>
+            <p style="color: var(--secondary-text); margin-bottom: 1.5rem;">
+                Manage existing users, view their data, or remove them.
+            </p>
+            <a href="/view_users" class="btn" style="background-color: #6c757d;">View Users</a>
+        </div>
+
+        <div class="card">
+            <h3>Live Monitor</h3>
+            <p style="color: var(--secondary-text); margin-bottom: 1.5rem;">
+                Watch the live camera feed in real-time.
+            </p>
+            <a href="/monitor" class="btn" style="background-color: #28a745;">Watch Live</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

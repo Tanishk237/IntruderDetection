@@ -1,0 +1,109 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto;">
+    <div class="d-flex justify-between align-center mb-2">
+        <div>
+            <h2 style="margin-bottom: 0.5rem;">Registered Users</h2>
+            <p style="color: var(--secondary-text);">Manage access and view user profiles.</p>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+            <button onclick="refreshRecognizer()" class="btn" style="background: linear-gradient(135deg, #28a745, #218838); box-shadow: 0 4px 12px rgba(40,167,69,0.3);">
+                <span style="margin-right: 8px;">🔄</span>Refresh System
+            </button>
+            <a href="/add_user" class="btn" style="background: linear-gradient(135deg, var(--primary), #0056b3); box-shadow: 0 4px 12px rgba(0,123,255,0.3);">
+                <span style="margin-right: 8px;">+</span>Add New User
+            </a>
+        </div>
+    </div>
+
+    <div class="card" style="background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.3); padding: 1rem; margin-bottom: 1.5rem;">
+        <p style="margin: 0; color: #ffc107; font-size: 0.9rem;">
+            <strong>ℹ️ Note:</strong> After adding or deleting users, click "Refresh System" to update the face recognition without restarting the application.
+        </p>
+    </div>
+
+    {% if users %}
+        <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+            {% for user in users %}
+            <div class="card user-card" style="padding: 0; overflow: hidden; border: 1px solid #333; transition: transform 0.2s, box-shadow 0.2s;">
+                <div style="padding: 1.5rem; display: flex; align-items: center; border-bottom: 1px solid #2a2a2a; background: linear-gradient(to bottom, #1a1a1a, #161616);">
+                    <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #333, #444); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 1rem; font-weight: bold; font-size: 1.5rem; color: #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.3);">
+                        {{ user[0] | upper }}
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.1rem; margin-bottom: 0.2rem;">{{ user }}</h3>
+                        <span style="font-size: 0.85rem; color: var(--secondary-text); display: block;">Authorized User</span>
+                    </div>
+                </div>
+                <div style="padding: 1rem; background-color: #111; display: flex; justify-content: space-between;">
+                    <a href="/user/{{ user }}" class="btn" style="background-color: transparent; border: 1px solid #444; color: var(--secondary-text); font-size: 0.9rem; padding: 8px 16px;">View Details</a>
+                    <button onclick="deleteUser('{{ user }}')" class="btn" style="background-color: rgba(220, 53, 69, 0.1); color: #dc3545; border: 1px solid rgba(220, 53, 69, 0.3); font-size: 0.9rem; padding: 8px 16px;">Delete</button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card text-center" style="padding: 4rem 2rem;">
+            <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">👥</div>
+            <h3 style="margin-bottom: 0.5rem;">No Users Found</h3>
+            <p style="color: var(--secondary-text); margin-bottom: 1.5rem;">Get started by adding authorized personnel to the system.</p>
+            <a href="/add_user" class="btn">Add First User</a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .user-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        border-color: #444;
+    }
+</style>
+
+<script>
+function refreshRecognizer() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span style="margin-right: 8px;">⏳</span>Refreshing...';
+    
+    fetch('/refresh_recognizer', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                btn.innerHTML = '<span style="margin-right: 8px;">✓</span>Success!';
+                btn.style.background = 'linear-gradient(135deg, #28a745, #218838)';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }, 2000);
+            } else {
+                alert('Error: ' + data.message);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        })
+        .catch(err => {
+            alert('Error refreshing recognizer: ' + err);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+}
+
+function deleteUser(username) {
+    if (confirm(`Are you sure you want to delete user "${username}"? This cannot be undone.`)) {
+        fetch(`/delete_user/${username}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    location.reload();
+                } else {
+                    alert('Error deleting user: ' + data.message);
+                }
+            })
+            .catch(err => alert('Error: ' + err));
+    }
+}
+</script>
+{% endblock %}

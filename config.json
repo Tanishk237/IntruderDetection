@@ -1,0 +1,12 @@
+{
+    "camera_index": "rtsp://Yash_Padam:Madap1973@192.168.0.100:554/stream2",
+    "device_camera_index": 0,
+    "unknown_frames_threshold": 3,
+    "save_intruder_path": "data/intruders",
+    "match_threshold": 0.45,
+    "telegram_token": "8321043898:AAEfzFk0h23BKYgUj8-yVcjGlWklrNgApy8",
+    "telegram_chat_id": "1640714737",
+    "send_telegram": true,
+    "frame_width": 640,
+    "frame_height": 480
+}

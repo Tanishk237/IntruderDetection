@@ -3,11 +3,11 @@ import threading
 import time
 
 class CameraStream:
-    _instances = {}  # Changed from single instance to dict of instances per source
+    _instances = {} 
     _lock = threading.Lock()
 
     def __new__(cls, src=0, width=None, height=None):
-        # Create unique key for this camera source
+        #create unique key for this camera source
         src_key = str(src)
         
         if src_key not in cls._instances:
